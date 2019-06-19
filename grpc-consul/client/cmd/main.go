@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	consulService = "consul://127.0.0.1:8500/helloworld" // consul中注册的服务地址
+	consulService = "consul://192.168.53.205:8500/helloworld" // consul中注册的服务地址
 	defaultName   = "world"
 )
 
