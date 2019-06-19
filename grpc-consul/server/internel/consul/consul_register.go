@@ -36,6 +36,12 @@ func RegisterService(consulAddress string, service *ConsulService) {
 		Tags:    service.Tag,                                                     // tag，可以为空
 		Port:    service.Port,                                                    // 服务端口
 		Address: service.IP,                                                      // 服务 IP
+		// In Consul 0.7 and later, checks that are associated with a service
+		// may also contain this optional DeregisterCriticalServiceAfter field,
+		// which is a timeout in the same Go time format as Interval and TTL. If
+		// a check is in the critical state for more than this configured value,
+		// then its associated service (and all of its associated checks) will
+		// automatically be deregistered.
 		Check: &api.AgentServiceCheck{ // 健康检查
 			Interval:                       interval.String(),                                               // 健康检查间隔
 			GRPC:                           fmt.Sprintf("%v:%v/%v", service.IP, service.Port, service.Name), // grpc 支持，执行健康检查的地址，service 会传到 Health.Check 函数中

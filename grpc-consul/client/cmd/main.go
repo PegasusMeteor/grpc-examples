@@ -1,19 +1,20 @@
-package cmd
+package main
 
 import (
 	"context"
-	"grpc-examples/grpc-consul/client/internel/consul"
 	"log"
 	"os"
 	"time"
 
-	pb "grpc-examples/proto/consul"
+	"github.com/PegasusMeteor/grpc-examples/grpc-consul/client/internel/consul"
+
+	pb "github.com/PegasusMeteor/grpc-examples/proto/consul"
 
 	"google.golang.org/grpc"
 )
 
 const (
-	consulService = "consul://127.0.0.1:8500/helloworld-gopher" // consul中注册的服务地址
+	consulService = "consul://127.0.0.1:8500/helloworld" // consul中注册的服务地址
 	defaultName   = "world"
 )
 

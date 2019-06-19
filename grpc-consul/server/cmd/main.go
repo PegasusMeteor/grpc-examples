@@ -1,10 +1,12 @@
-package cmd
+package main
 
 import (
 	"context"
-	"grpc-examples/grpc-consul/server/internel/consul"
-	pb "grpc-examples/proto/consul"
 	"net"
+
+	pb "github.com/PegasusMeteor/grpc-examples/proto/consul"
+
+	"github.com/PegasusMeteor/grpc-examples/grpc-consul/server/internel/consul"
 
 	"google.golang.org/grpc/health/grpc_health_v1"
 
@@ -27,10 +29,10 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 
 // RegisterToConsul 调用RegisterService向consul中注册
 func RegisterToConsul() {
-	consul.RegisterService("127.0.0.1:8500", &consul.ConsulService{
-		Name: "helloworld-gopher",
+	consul.RegisterService("192.168.53.205:8500", &consul.ConsulService{
+		Name: "helloworld",
 		Tag:  []string{"helloworld", "gopher"},
-		IP:   "127.0.0.1",
+		IP:   "192.168.53.205",
 		Port: 50051,
 	})
 }
@@ -46,6 +48,8 @@ func (h *HealthImpl) Check(ctx context.Context, req *grpc_health_v1.HealthCheckR
 		Status: grpc_health_v1.HealthCheckResponse_SERVING,
 	}, nil
 }
+
+// Watch 实现健康检查接口
 func (h *HealthImpl) Watch(req *grpc_health_v1.HealthCheckRequest, w grpc_health_v1.Health_WatchServer) error {
 	return nil
 }

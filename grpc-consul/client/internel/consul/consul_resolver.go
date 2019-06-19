@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sync"
 
+	"google.golang.org/grpc/serviceconfig"
+
 	"github.com/hashicorp/consul/api"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/resolver"
@@ -95,8 +97,18 @@ func (cr *consulResolver) watcher() {
 		}
 		log.Printf("adding service addrs\n")
 		log.Printf("newAddrs: %v\n", newAddrs)
-		cr.clientConn.NewAddress(newAddrs)
-		cr.clientConn.NewServiceConfig(cr.name)
+
+		serviceConfig, err := serviceconfig.Parse(cr.name)
+		if err != nil {
+			state := resolver.State{
+				Addresses:     newAddrs,
+				ServiceConfig: serviceConfig,
+			}
+			cr.clientConn.UpdateState(state)
+		} else {
+			log.Error(err.Error())
+		}
+
 	}
 
 }
