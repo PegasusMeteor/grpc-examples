@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 
+	"github.com/PegasusMeteor/grpc-examples/grpc-tracing-intercepter"
+
 	pb "github.com/PegasusMeteor/grpc-examples/proto/consul"
 
 	"github.com/PegasusMeteor/grpc-examples/grpc-consul/server/internel/consul"
@@ -15,7 +17,9 @@ import (
 )
 
 const (
-	port = ":50051"
+	port        = ":50051"
+	jaegerAgent = "192.168.52.160:6831"
+	serviceName = "HelloServer"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -29,10 +33,10 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 
 // RegisterToConsul 调用RegisterService向consul中注册
 func RegisterToConsul() {
-	consul.RegisterService("192.168.53.205:8500", &consul.ConsulService{
+	consul.RegisterService("192.168.52.160:8500", &consul.ConsulService{
 		Name: "helloworld",
 		Tag:  []string{"helloworld", "gopher"},
-		IP:   "192.168.53.205",
+		IP:   "192.168.52.160",
 		Port: 50051,
 	})
 }
@@ -55,11 +59,17 @@ func (h *HealthImpl) Watch(req *grpc_health_v1.HealthCheckRequest, w grpc_health
 }
 
 func main() {
+
+	tracer, closer, err := intercepter.NewJaegerTracer(serviceName, jaegerAgent)
+	defer closer.Close()
+	if err != nil {
+		log.Printf("NewJaegerTracer err: %v", err.Error())
+	}
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(intercepter.ServerInterceptor(tracer)))
 	pb.RegisterGopherServer(s, &server{})
 	grpc_health_v1.RegisterHealthServer(s, &HealthImpl{})
 	RegisterToConsul()

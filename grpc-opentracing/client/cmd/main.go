@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/PegasusMeteor/grpc-examples/grpc-tracing-intercepter"
+
 	"github.com/PegasusMeteor/grpc-examples/grpc-consul/client/internel/consul"
 
 	pb "github.com/PegasusMeteor/grpc-examples/proto/consul"
@@ -14,16 +16,23 @@ import (
 )
 
 const (
-	consulService = "consul://192.168.53.205:8500/helloworld" // consul中注册的服务地址
+	consulService = "consul://192.168.52.160:8500/helloworld" // consul中注册的服务地址
 	defaultName   = "world"
+	jaegerAgent   = "192.168.52.160:6831"
+	serviceName   = "HelloClient"
 )
 
 func main() {
 	consul.Init()
 
+	tracer, closer, err := intercepter.NewJaegerTracer(serviceName, jaegerAgent)
+	defer closer.Close()
+	if err != nil {
+		log.Printf("NewJaegerTracer err:", err.Error())
+	}
 	// Set up a connection to the server.
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	conn, err := grpc.DialContext(ctx, consulService, grpc.WithBlock(), grpc.WithInsecure(), grpc.WithBalancerName("round_robin"))
+	conn, err := grpc.DialContext(ctx, consulService, grpc.WithInsecure(), grpc.WithBalancerName("round_robin"), grpc.WithUnaryInterceptor(intercepter.ClientInterceptor(tracer)))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
