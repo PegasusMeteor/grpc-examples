@@ -101,6 +101,7 @@ func NewJaegerTracer(serviceName string, jagentHost string) (tracer opentracing.
 		jaegercfg.Logger(jLogger),
 		jaegercfg.Metrics(jMetricsFactory))
 
+	opentracing.SetGlobalTracer(tracer)
 	if err != nil {
 		grpclog.Errorf("Could not initialize jaeger tracer: %s", err.Error())
 		return
@@ -122,7 +123,7 @@ func ClientInterceptor(tracer opentracing.Tracer) grpc.UnaryClientInterceptor {
 		span := tracer.StartSpan(
 			method,
 			opentracing.ChildOf(parentCtx),
-			opentracing.Tag{Key: string(ext.Component), Value: "gRPC"},
+			opentracing.Tag{Key: string(ext.Component), Value: "gRPC Client"},
 			ext.SpanKindRPCClient,
 		)
 
@@ -172,7 +173,7 @@ func ServerInterceptor(tracer opentracing.Tracer) grpc.UnaryServerInterceptor {
 			span := tracer.StartSpan(
 				info.FullMethod,
 				ext.RPCServerOption(spanContext),
-				opentracing.Tag{Key: string(ext.Component), Value: "gRPC"},
+				opentracing.Tag{Key: string(ext.Component), Value: "gRPC Server"},
 				ext.SpanKindRPCServer,
 			)
 			defer span.Finish()
